@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  name         String?
+  passwordHash String
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  addresses    Address[]
+  pickups      PickupRequest[]
+}
+
+model Address {
+  id        String          @id @default(cuid())
+  userId    String
+  street    String
+  number    String?
+  district  String?
+  city      String
+  state     String
+  zip       String
+  createdAt DateTime        @default(now())
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  pickups   PickupRequest[]
+}
+
+model MaterialCategory {
+  id        String           @id @default(cuid())
+  name      String           @unique
+  icon      String?
+  createdAt DateTime         @default(now())
+  pickups   PickupCategory[]
+}
+
+model PickupRequest {
+  id           String           @id @default(cuid())
+  userId       String
+  addressId    String
+  status       PickupStatus     @default(PENDING)
+  notes        String?
+  requestedAt  DateTime         @default(now())
+  scheduledFor DateTime?
+  completedAt  DateTime?
+  user         User             @relation(fields: [userId], references: [id])
+  address      Address          @relation(fields: [addressId], references: [id])
+  photos       PickupPhoto[]
+  categories   PickupCategory[]
+}
+
+model PickupPhoto {
+  id        String        @id @default(cuid())
+  pickupId  String
+  url       String
+  createdAt DateTime      @default(now())
+  pickup    PickupRequest @relation(fields: [pickupId], references: [id], onDelete: Cascade)
+}
+
+model PickupCategory {
+  pickupId   String
+  categoryId String
+  pickup     PickupRequest    @relation(fields: [pickupId], references: [id], onDelete: Cascade)
+  category   MaterialCategory @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@id([pickupId, categoryId])
+}
+
+model CollectionPoint {
+  id        String   @id @default(cuid())
+  name      String
+  latitude  Float
+  longitude Float
+  address   String
+  phone     String?
+  website   String?
+  createdAt DateTime @default(now())
+}
+
+enum PickupStatus {
+  PENDING
+  SCHEDULED
+  IN_PROGRESS
+  COMPLETED
+  CANCELED
+}
