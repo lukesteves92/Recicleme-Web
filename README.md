@@ -59,5 +59,47 @@ pnpm dev
 - `pnpm prisma:deploy` – `prisma migrate deploy`
 - `pnpm seed` – popula categorias e um usuário admin (`admin@reuse.local` / `admin123`)
 
+## 🧩 Painel Administrativo – Node-RED (Fase 6)
+
+Nesta fase, desenvolvemos um painel administrativo **low-code** utilizando **Node-RED**, integrado à plataforma ReUse (Recicle-Me).
+
+### 🚀 Objetivo
+Permitir o controle interno da plataforma, com:
+- Ativação/desativação de funcionalidades (Trocas, Notificações, Programa de Indicação)
+- Configuração de parâmetros operacionais
+- Publicação de anúncios para usuários
+
+### ⚙️ Estrutura
+Os arquivos do painel estão em [`/node-red`](./node-red):
+
+- `reuse_admin_flow.json` → fluxo importável no Node-RED  
+- `README_NodeRED_Admin.md` → documentação técnica
+
+### 🔗 Integração com APIs
+O painel comunica-se diretamente com rotas internas do projeto:
+- `PUT /api/admin/feature-flags`  
+- `POST /api/admin/announcements`  
+
+Essas rotas estão em:  
+`src/pages/api/admin/feature-flags.ts`  
+`src/pages/api/admin/announcements.ts`
+
+### 🖥️ Como executar o painel
+1. Execute o Node-RED localmente ou via Docker:
+   ```bash
+   docker run -it -p 1880:1880 --name nodered nodered/node-red
+2. Acesse http://localhost:1880
+
+3. Importe o arquivo reuse_admin_flow.json
+
+4. Ajuste o campo BASE_URL no nó Bootstrap defaults para:
+
+```bash
+https://recicleme-web.vercel.app
+```
+
+
+5. Clique em Deploy e acesse o painel em http://localhost:1880/ui
+
 ## Licença
 MIT

@@ -1,0 +1,509 @@
+[
+  {
+    "id": "tab_reuse_admin",
+    "type": "tab",
+    "label": "ReUse Admin",
+    "disabled": false,
+    "info": ""
+  },
+  {
+    "id": "ui_tab_reuse",
+    "type": "ui_tab",
+    "z": "",
+    "name": "ReUse Admin",
+    "icon": "dashboard",
+    "order": 1,
+    "disabled": false,
+    "hidden": false
+  },
+  {
+    "id": "ui_group_flags",
+    "type": "ui_group",
+    "z": "",
+    "name": "Feature Flags & Params",
+    "tab": "ui_tab_reuse",
+    "order": 1,
+    "disp": true,
+    "width": "12",
+    "collapse": false
+  },
+  {
+    "id": "ui_group_announce",
+    "type": "ui_group",
+    "z": "",
+    "name": "Announcements",
+    "tab": "ui_tab_reuse",
+    "order": 2,
+    "disp": true,
+    "width": "12",
+    "collapse": false
+  },
+  {
+    "id": "fn_bootstrap",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Bootstrap defaults",
+    "func": "\n// Initialize defaults in flow context if not present\nvar state = flow.get('admin_state') || {\n  flags: {\n    systemExchangeEnabled: true,\n    notificationsEnabled: true,\n    referralProgramEnabled: false\n  },\n  params: {\n    pickupLimitPerDay: 50,\n    minAppVersion: \"1.0.0\"\n  },\n  lastAnnouncement: {\n    message: \"\",\n    scheduledAt: \"\"\n  },\n  BASE_URL: \"https://YOUR_WEB_BASE_URL\"\n};\nflow.set('admin_state', state);\nreturn {payload: state};\n",
+    "outputs": 1,
+    "noerr": 0,
+    "initialize": "",
+    "finalize": "",
+    "libs": [],
+    "x": 200,
+    "y": 80,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "ui_switch_exchange",
+    "type": "ui_switch",
+    "z": "tab_reuse_admin",
+    "name": "Trocas Ativas (systemExchangeEnabled)",
+    "label": "Trocas Ativas",
+    "tooltip": "",
+    "group": "ui_group_flags",
+    "order": 1,
+    "width": 6,
+    "height": 1,
+    "passthru": true,
+    "decouple": "false",
+    "topic": "flags.systemExchangeEnabled",
+    "style": "",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "x": 250,
+    "y": 160,
+    "wires": [
+      [
+        "fn_update_flag"
+      ]
+    ]
+  },
+  {
+    "id": "ui_switch_notifications",
+    "type": "ui_switch",
+    "z": "tab_reuse_admin",
+    "name": "Notificações (notificationsEnabled)",
+    "label": "Notificações",
+    "tooltip": "",
+    "group": "ui_group_flags",
+    "order": 2,
+    "width": 6,
+    "height": 1,
+    "passthru": true,
+    "decouple": "false",
+    "topic": "flags.notificationsEnabled",
+    "style": "",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "x": 260,
+    "y": 200,
+    "wires": [
+      [
+        "fn_update_flag"
+      ]
+    ]
+  },
+  {
+    "id": "ui_switch_referral",
+    "type": "ui_switch",
+    "z": "tab_reuse_admin",
+    "name": "Programa Indique e Ganhe (referralProgramEnabled)",
+    "label": "Indique e Ganhe",
+    "tooltip": "",
+    "group": "ui_group_flags",
+    "order": 3,
+    "width": 6,
+    "height": 1,
+    "passthru": true,
+    "decouple": "false",
+    "topic": "flags.referralProgramEnabled",
+    "style": "",
+    "onvalue": "true",
+    "onvalueType": "bool",
+    "offvalue": "false",
+    "offvalueType": "bool",
+    "x": 290,
+    "y": 240,
+    "wires": [
+      [
+        "fn_update_flag"
+      ]
+    ]
+  },
+  {
+    "id": "fn_update_flag",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Atualiza flag em flow.admin_state",
+    "func": "\n// msg.topic example: \"flags.systemExchangeEnabled\"\nvar topic = msg.topic || \"\";\nvar state = flow.get('admin_state') || {};\nif(topic.startsWith(\"flags.\")) {\n    var key = topic.split(\".\")[1];\n    state.flags = state.flags || {};\n    state.flags[key] = msg.payload;\n    flow.set('admin_state', state);\n    msg.payload = state; // pass whole state\n}\nreturn msg;\n",
+    "outputs": 1,
+    "x": 560,
+    "y": 200,
+    "wires": [
+      [
+        "http_req_update_flags"
+      ]
+    ]
+  },
+  {
+    "id": "ui_num_pickup_limit",
+    "type": "ui_numeric",
+    "z": "tab_reuse_admin",
+    "name": "Limite coletas/dia",
+    "label": "Limite coletas/dia",
+    "group": "ui_group_flags",
+    "order": 4,
+    "width": 6,
+    "height": 1,
+    "wrap": false,
+    "passthru": true,
+    "topic": "params.pickupLimitPerDay",
+    "format": "{{value}}",
+    "min": 0,
+    "max": 500,
+    "step": 1,
+    "x": 240,
+    "y": 300,
+    "wires": [
+      [
+        "fn_update_param"
+      ]
+    ]
+  },
+  {
+    "id": "ui_txt_min_version",
+    "type": "ui_text_input",
+    "z": "tab_reuse_admin",
+    "name": "Min App Version",
+    "label": "Min App Version",
+    "group": "ui_group_flags",
+    "order": 5,
+    "width": 6,
+    "height": 1,
+    "passthru": true,
+    "topic": "params.minAppVersion",
+    "mode": "text",
+    "delay": 500,
+    "x": 230,
+    "y": 340,
+    "wires": [
+      [
+        "fn_update_param"
+      ]
+    ]
+  },
+  {
+    "id": "fn_update_param",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Atualiza param em flow.admin_state",
+    "func": "\n// msg.topic example: \"params.pickupLimitPerDay\"\nvar topic = msg.topic || \"\";\nvar state = flow.get('admin_state') || {};\nif(topic.startsWith(\"params.\")) {\n    var key = topic.split(\".\")[1];\n    state.params = state.params || {};\n    state.params[key] = msg.payload;\n    flow.set('admin_state', state);\n    msg.payload = state;\n}\nreturn msg;\n",
+    "outputs": 1,
+    "x": 555,
+    "y": 320,
+    "wires": [
+      [
+        "http_req_update_flags"
+      ]
+    ]
+  },
+  {
+    "id": "http_req_update_flags",
+    "type": "http request",
+    "z": "tab_reuse_admin",
+    "name": "PUT BASE_URL/api/admin/feature-flags",
+    "method": "PUT",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "",
+    "persist": false,
+    "authType": "",
+    "tls": "",
+    "x": 910,
+    "y": 260,
+    "wires": [
+      [
+        "fn_attach_response"
+      ]
+    ]
+  },
+  {
+    "id": "fn_attach_response",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Define URL e payload",
+    "func": "\nvar state = flow.get('admin_state') || {};\nvar base = state.BASE_URL || \"https://example.com\";\nmsg.url = base + \"/api/admin/feature-flags\";\nmsg.headers = {\"Content-Type\":\"application/json\"};\nmsg.payload = JSON.stringify({\n  flags: state.flags || {},\n  params: state.params || {}\n});\nreturn msg;\n",
+    "outputs": 1,
+    "x": 915,
+    "y": 200,
+    "wires": [
+      [
+        "http_req_update_flags"
+      ]
+    ]
+  },
+  {
+    "id": "ui_txt_announce",
+    "type": "ui_text_input",
+    "z": "tab_reuse_admin",
+    "name": "Mensagem",
+    "label": "Mensagem",
+    "group": "ui_group_announce",
+    "order": 1,
+    "width": 12,
+    "height": 1,
+    "passthru": false,
+    "topic": "announce.message",
+    "mode": "text",
+    "delay": 300,
+    "x": 220,
+    "y": 420,
+    "wires": [
+      [
+        "fn_set_announce_msg"
+      ]
+    ]
+  },
+  {
+    "id": "ui_txt_schedule",
+    "type": "ui_text_input",
+    "z": "tab_reuse_admin",
+    "name": "Agendar para (ISO)",
+    "label": "Agendar para (ISO)",
+    "group": "ui_group_announce",
+    "order": 2,
+    "width": 6,
+    "height": 1,
+    "passthru": false,
+    "topic": "announce.scheduledAt",
+    "mode": "text",
+    "delay": 300,
+    "x": 260,
+    "y": 460,
+    "wires": [
+      [
+        "fn_set_announce_msg"
+      ]
+    ]
+  },
+  {
+    "id": "ui_btn_send_announce",
+    "type": "ui_button",
+    "z": "tab_reuse_admin",
+    "name": "Publicar anúncio",
+    "group": "ui_group_announce",
+    "order": 3,
+    "width": 4,
+    "height": 1,
+    "passthru": false,
+    "label": "Publicar anúncio",
+    "tooltip": "Envia para API /admin/announcements",
+    "color": "",
+    "bgcolor": "",
+    "icon": "",
+    "payload": "",
+    "payloadType": "str",
+    "topic": "",
+    "x": 245,
+    "y": 500,
+    "wires": [
+      [
+        "fn_send_announce"
+      ]
+    ]
+  },
+  {
+    "id": "fn_set_announce_msg",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Guarda campos do anúncio",
+    "func": "\nvar state = flow.get('admin_state') || {};\nstate.lastAnnouncement = state.lastAnnouncement || {message:\"\", scheduledAt:\"\"};\nvar topic = msg.topic || \"\";\nif(topic === \"announce.message\") state.lastAnnouncement.message = msg.payload;\nif(topic === \"announce.scheduledAt\") state.lastAnnouncement.scheduledAt = msg.payload;\nflow.set('admin_state', state);\nreturn null;\n",
+    "outputs": 1,
+    "x": 585,
+    "y": 440,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "fn_send_announce",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Monta payload anúncio",
+    "func": "\nvar state = flow.get('admin_state') || {};\nvar base = state.BASE_URL || \"https://example.com\";\nmsg.method = \"POST\";\nmsg.url = base + \"/api/admin/announcements\";\nmsg.headers = {\"Content-Type\":\"application/json\"};\nmsg.payload = JSON.stringify(state.lastAnnouncement || {});\nreturn msg;\n",
+    "outputs": 1,
+    "x": 560,
+    "y": 500,
+    "wires": [
+      [
+        "http_req_announce"
+      ]
+    ]
+  },
+  {
+    "id": "http_req_announce",
+    "type": "http request",
+    "z": "tab_reuse_admin",
+    "name": "POST BASE_URL/api/admin/announcements",
+    "method": "use",
+    "ret": "txt",
+    "paytoqs": "ignore",
+    "url": "",
+    "persist": false,
+    "authType": "",
+    "tls": "",
+    "x": 885,
+    "y": 500,
+    "wires": [
+      []
+    ]
+  },
+  {
+    "id": "httpin_get_flags",
+    "type": "http in",
+    "z": "tab_reuse_admin",
+    "name": "GET /admin/flags",
+    "url": "/admin/flags",
+    "method": "get",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 150,
+    "y": 600,
+    "wires": [
+      [
+        "fn_get_flags"
+      ]
+    ]
+  },
+  {
+    "id": "fn_get_flags",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Lê state.flags/params",
+    "func": "\nvar state = flow.get('admin_state') || {};\nmsg.payload = {\n  flags: state.flags || {},\n  params: state.params || {}\n};\nreturn msg;\n",
+    "outputs": 1,
+    "x": 370,
+    "y": 600,
+    "wires": [
+      [
+        "httpout_json"
+      ]
+    ]
+  },
+  {
+    "id": "httpin_put_flags",
+    "type": "http in",
+    "z": "tab_reuse_admin",
+    "name": "PUT /admin/flags",
+    "url": "/admin/flags",
+    "method": "put",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 150,
+    "y": 640,
+    "wires": [
+      [
+        "json_parser",
+        "fn_put_flags"
+      ]
+    ]
+  },
+  {
+    "id": "json_parser",
+    "type": "json",
+    "z": "tab_reuse_admin",
+    "name": "Parse JSON",
+    "property": "payload",
+    "action": "",
+    "pretty": false,
+    "x": 355,
+    "y": 660,
+    "wires": [
+      [
+        "fn_put_flags"
+      ]
+    ]
+  },
+  {
+    "id": "fn_put_flags",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Atualiza state.flags/params (PUT)",
+    "func": "\nvar body = msg.payload || {};\nvar state = flow.get('admin_state') || {};\nif(body.flags)  state.flags  = body.flags;\nif(body.params) state.params = body.params;\nflow.set('admin_state', state);\nmsg.payload = { ok: true, state };\nreturn msg;\n",
+    "outputs": 1,
+    "x": 625,
+    "y": 640,
+    "wires": [
+      [
+        "httpout_json"
+      ]
+    ]
+  },
+  {
+    "id": "httpin_post_announce",
+    "type": "http in",
+    "z": "tab_reuse_admin",
+    "name": "POST /admin/announce",
+    "url": "/admin/announce",
+    "method": "post",
+    "upload": false,
+    "swaggerDoc": "",
+    "x": 160,
+    "y": 700,
+    "wires": [
+      [
+        "json_parser2",
+        "fn_proxy_announce"
+      ]
+    ]
+  },
+  {
+    "id": "json_parser2",
+    "type": "json",
+    "z": "tab_reuse_admin",
+    "name": "Parse JSON",
+    "property": "payload",
+    "action": "",
+    "pretty": false,
+    "x": 355,
+    "y": 700,
+    "wires": [
+      [
+        "fn_proxy_announce"
+      ]
+    ]
+  },
+  {
+    "id": "fn_proxy_announce",
+    "type": "function",
+    "z": "tab_reuse_admin",
+    "name": "Proxy para POST /api/admin/announcements",
+    "func": "\nvar state = flow.get('admin_state') || {};\nvar base = state.BASE_URL || \"https://example.com\";\nmsg.headers = {\"Content-Type\":\"application/json\"};\nmsg.method = \"POST\";\nmsg.url = base + \"/api/admin/announcements\";\nmsg.payload = JSON.stringify(msg.payload || {});\nreturn msg;\n",
+    "outputs": 1,
+    "x": 690,
+    "y": 700,
+    "wires": [
+      [
+        "http_req_announce",
+        "httpout_json"
+      ]
+    ]
+  },
+  {
+    "id": "httpout_json",
+    "type": "http response",
+    "z": "tab_reuse_admin",
+    "name": "HTTP 200 (JSON)",
+    "statusCode": "200",
+    "headers": {},
+    "x": 940,
+    "y": 640,
+    "wires": []
+  }
+]
